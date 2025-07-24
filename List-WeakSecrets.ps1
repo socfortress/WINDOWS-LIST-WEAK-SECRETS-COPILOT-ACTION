@@ -11,6 +11,7 @@ $ErrorActionPreference = 'Stop'
 $HostName  = $env:COMPUTERNAME
 $LogMaxKB  = 100
 $LogKeep   = 5
+
 function Rotate-Log {
     param ([string]$Path, [int]$MaxKB, [int]$Keep)
     if (Test-Path $Path) {
@@ -54,7 +55,19 @@ function Log-FlaggedJSON {
     } | ConvertTo-Json -Depth 5 -Compress
     Add-Content -Path $ARLog -Value $Entry
 }
+
 Rotate-Log -Path $LogPath -MaxKB $LogMaxKB -Keep $LogKeep
+
+try {
+    if (Test-Path $ARLog) {
+        Remove-Item -Path $ARLog -Force -ErrorAction Stop
+    }
+    New-Item -Path $ARLog -ItemType File -Force | Out-Null
+    Write-Log INFO "Active response log cleared for fresh run."
+} catch {
+    Write-Log WARN "Failed to clear ${ARLog}: $($_.Exception.Message)"
+}
+
 Write-Log INFO "=== SCRIPT START : List Weak Secrets (Configurable) ==="
 Write-Log INFO "Scanning $RootDir (ExcludeSystem=$ExcludeSystem, MaxSizeMB=$MaxSizeMB)"
 
@@ -73,9 +86,7 @@ try {
         }
     }
     $files = $files | Where-Object { $_.Length -lt ($MaxSizeMB * 1MB) }
-
     $flagged = @()
-
     foreach ($file in $files) {
         $content = ""
         try {
@@ -102,9 +113,8 @@ try {
     } else {
         Write-Host "No plain-text secrets detected." -ForegroundColor Green
     }
-
-    Write-Host "`nFlagged results (with SHA256 and scan counts) appended to $ARLog" -ForegroundColor Gray
-    Write-Log INFO "Scanned $($dirs.Count) dirs, $($files.Count) files. Flagged $($flagged.Count). JSON appended."
+    Write-Host "`nFlagged results (with SHA256 and scan counts) written to $ARLog" -ForegroundColor Gray
+    Write-Log INFO "Scanned $($dirs.Count) dirs, $($files.Count) files. Flagged $($flagged.Count). JSON written."
 }
 catch {
     Write-Log ERROR "Failed to complete secret inventory: $_"
