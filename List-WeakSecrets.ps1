@@ -43,30 +43,7 @@ function Get-FileHashSHA256 {
     }
 }
 
-function Log-FlaggedJSON {
-    param ($Data, [int]$DirCount, [int]$FileCount)
-    $Entry = @{
-        timestamp = (Get-Date).ToString('o')
-        hostname  = $HostName
-        type      = 'weak_secrets_flagged'
-        scanned_directories = $DirCount
-        scanned_files = $FileCount
-        flagged = $Data
-    } | ConvertTo-Json -Depth 5 -Compress
-    Add-Content -Path $ARLog -Value $Entry
-}
-
 Rotate-Log -Path $LogPath -MaxKB $LogMaxKB -Keep $LogKeep
-
-try {
-    if (Test-Path $ARLog) {
-        Remove-Item -Path $ARLog -Force -ErrorAction Stop
-    }
-    New-Item -Path $ARLog -ItemType File -Force | Out-Null
-    Write-Log INFO "Active response log cleared for fresh run."
-} catch {
-    Write-Log WARN "Failed to clear ${ARLog}: $($_.Exception.Message)"
-}
 
 Write-Log INFO "=== SCRIPT START : List Weak Secrets (Configurable) ==="
 Write-Log INFO "Scanning $RootDir (ExcludeSystem=$ExcludeSystem, MaxSizeMB=$MaxSizeMB)"
@@ -74,9 +51,11 @@ Write-Log INFO "Scanning $RootDir (ExcludeSystem=$ExcludeSystem, MaxSizeMB=$MaxS
 try {
     $searchPatterns = @("*.env","*.ini","*.txt","*.json")
     $keywordPatterns = @('password\s*=','apikey\s*=','secret\s*=','token\s*=')
+
     $allItems = Get-ChildItem -Path $RootDir -Recurse -Include $searchPatterns -ErrorAction SilentlyContinue
     $dirs = $allItems | Where-Object { $_.PSIsContainer }
     $files = $allItems | Where-Object { -not $_.PSIsContainer }
+
     if ($ExcludeSystem) {
         $files = $files | Where-Object {
             $_.FullName -notmatch '^C:\\Windows' -and
@@ -85,7 +64,9 @@ try {
             $_.FullName -notmatch '^C:\\ProgramData'
         }
     }
+
     $files = $files | Where-Object { $_.Length -lt ($MaxSizeMB * 1MB) }
+
     $flagged = @()
     foreach ($file in $files) {
         $content = ""
@@ -105,7 +86,26 @@ try {
             }
         }
     }
-    Log-FlaggedJSON -Data $flagged -DirCount $dirs.Count -FileCount $files.Count
+    $report = [PSCustomObject]@{
+        timestamp = (Get-Date).ToString('o')
+        hostname  = $HostName
+        type      = 'weak_secrets_flagged'
+        scanned_directories = $dirs.Count
+        scanned_files       = $files.Count
+        flagged             = $flagged
+    }
+    $json = $report | ConvertTo-Json -Depth 5 -Compress
+    $tempFile = "$env:TEMP\arlog.tmp"
+    Set-Content -Path $tempFile -Value $json -Encoding ascii -Force
+
+    try {
+        Move-Item -Path $tempFile -Destination $ARLog -Force
+        Write-Log INFO "Log file replaced at $ARLog"
+    } catch {
+        Move-Item -Path $tempFile -Destination "$ARLog.new" -Force
+        Write-Log WARN "Log locked, wrote results to $ARLog.new"
+    }
+
     Write-Host "Scanned $($dirs.Count) directories and $($files.Count) files." -ForegroundColor Cyan
     if ($flagged.Count -gt 0) {
         Write-Host "Found $($flagged.Count) files containing possible secrets." -ForegroundColor Yellow
@@ -113,12 +113,23 @@ try {
     } else {
         Write-Host "No plain-text secrets detected." -ForegroundColor Green
     }
-    Write-Host "`nFlagged results (with SHA256 and scan counts) written to $ARLog" -ForegroundColor Gray
-    Write-Log INFO "Scanned $($dirs.Count) dirs, $($files.Count) files. Flagged $($flagged.Count). JSON written."
+    Write-Host "`nResults written to $ARLog (or .new if locked)" -ForegroundColor Gray
+    Write-Log INFO "Scan complete. Flagged $($flagged.Count) files. JSON written."
 }
 catch {
     Write-Log ERROR "Failed to complete secret inventory: $_"
-    Write-Host "ERROR: Inventory failed. See $LogPath for details." -ForegroundColor Red
+
+    $errorObj = [PSCustomObject]@{
+        timestamp = (Get-Date).ToString('o')
+        hostname  = $HostName
+        type      = 'weak_secrets_flagged'
+        status    = 'error'
+        error     = $_.Exception.Message
+    }
+    $json = $errorObj | ConvertTo-Json -Compress
+    $fallback = "$ARLog.new"
+    Set-Content -Path $fallback -Value $json -Encoding ascii -Force
+    Write-Log WARN "Error logged to $fallback"
 }
 
 Write-Log INFO "=== SCRIPT END : List Weak Secrets ==="
