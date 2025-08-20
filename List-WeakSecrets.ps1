@@ -93,6 +93,7 @@ try {
         scanned_directories = $dirs.Count
         scanned_files       = $files.Count
         flagged             = $flagged
+        copilot_action = $true
     }
     $json = $report | ConvertTo-Json -Depth 5 -Compress
     $tempFile = "$env:TEMP\arlog.tmp"
@@ -125,7 +126,7 @@ catch {
         type      = 'weak_secrets_flagged'
         status    = 'error'
         error     = $_.Exception.Message
-        copilot_soar = $true
+        copilot_action = $true
     }
     $json = $errorObj | ConvertTo-Json -Compress
     $fallback = "$ARLog.new"
@@ -134,3 +135,4 @@ catch {
 }
 
 Write-Log INFO "=== SCRIPT END : List Weak Secrets ==="
+
