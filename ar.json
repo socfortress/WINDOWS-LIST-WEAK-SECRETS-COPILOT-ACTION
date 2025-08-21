@@ -1,0 +1,19 @@
+{
+  "active_response_name": "WINDOWS-LIST-WEAK-SECRETS-ACTIVERESPONSE",
+  "description": "WINDOWS-LIST-WEAK-SECRETS-ACTIVERESPONSE",
+  "technology": "Windows",
+  "icon": "windows",
+  "script_parameters": [
+    {
+      "name": "RunID",
+      "type": "string",
+      "required": false,
+      "description": "Unique run identifier for log correlation",
+      "default": null
+    }
+  ],
+  "repo_url": "https://github.com/socfortress/WINDOWS-LIST-WEAK-SECRETS-ACTIVERESPONSE",
+  "script_name": "WINDOWS-LIST-WEAK-SECRETS-ACTIVERESPONSE.ps1",
+  "version": "1.0.0",
+  "last_updated": "2025-08-20T00:00:00Z"
+}
