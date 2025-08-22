@@ -1,5 +1,5 @@
 {
-  "active_response_name": "WINDOWS-LIST-WEAK-SECRETS-ACTIVERESPONSE",
+  "copilot_action_name": "WINDOWS-LIST-WEAK-SECRETS-ACTIVERESPONSE",
   "description": "Recursively scans files for potential plain-text secrets (passwords, API keys, tokens, etc.) within specified directories. Supports configurable root directory, optional exclusion of system folders, and maximum file size limit. Matches against common keywords, calculates SHA256 for flagged files, and outputs NDJSON containing a full summary with flagged files. Writes atomically to the Active Response log with .new fallback.",
   "technology": "Windows",
   "icon": "windows",
