@@ -1,47 +1,10 @@
 {
   "copilot_action_name": "WINDOWS-LIST-WEAK-SECRETS-COPILOT-ACTION",
-  "description": "Recursively scans files for potential plain-text secrets (passwords, API keys, tokens, etc.) within specified directories. Supports configurable root directory, optional exclusion of system folders, and maximum file size limit. Matches against common keywords, calculates SHA256 for flagged files, and outputs NDJSON containing a full summary with flagged files. Writes atomically to the Active Response log with .new fallback.",
+  "description": "Recursively scans C:\\ for small text/config files (*.env, *.ini, *.txt, *.json) and flags lines that appear to contain weak secrets (e.g., password=, apikey=, secret=, token=). Emits NDJSON with a verification record, a run summary, and one entry per flagged file including path, size, matched keyword, and SHA256.",
   "technology": "Windows",
   "icon": "windows",
-  "script_parameters": [
-    {
-      "name": "LogPath",
-      "type": "string",
-      "required": false,
-      "description": "Path to the rotating human-readable script log.",
-      "default": "%TEMP%/List-WeakSecrets.log"
-    },
-    {
-      "name": "ARLog",
-      "type": "string",
-      "required": false,
-      "description": "Active Response NDJSON output path (atomic overwrite; falls back to .new if locked).",
-      "default": "C:\\Program Files (x86)\\ossec-agent\\active-response\\active-responses.log"
-    },
-    {
-      "name": "RootDir",
-      "type": "string",
-      "required": false,
-      "description": "Root directory to scan for files containing potential secrets.",
-      "default": "C:\\"
-    },
-    {
-      "name": "ExcludeSystem",
-      "type": "boolean",
-      "required": false,
-      "description": "Exclude system directories from scanning (Windows, Program Files, ProgramData).",
-      "default": false
-    },
-    {
-      "name": "MaxSizeMB",
-      "type": "integer",
-      "required": false,
-      "description": "Maximum file size (in MB) to scan.",
-      "default": 50
-    }
-  ],
-  "repo_url": "https://raw.githubusercontent.com/socfortress/WINDOWS-LIST-WEAK-SECRETS-COPILOT-ACTION/refs/heads/main",
-  "script_name": "List-WeakSecrets.ps1",
+  "repo_url": "https://raw.githubusercontent.com/socfortress/WINDOWS-LIST-WEAK-SECRETS-COPILOT-ACTION/refs/heads/main/List-Weak-Secrets.ps1",
+  "script_name": "List-Weak-Secrets.ps1",
   "version": "1.0.0",
-  "last_updated": "2025-08-22T00:00:00Z"
+  "last_updated": "2025-09-09T00:00:00Z"
 }
