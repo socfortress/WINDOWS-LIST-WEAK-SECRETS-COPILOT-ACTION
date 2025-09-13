@@ -3,7 +3,7 @@
   "description": "Recursively scans C:\\ for small text/config files (*.env, *.ini, *.txt, *.json) and flags lines that appear to contain weak secrets (e.g., password=, apikey=, secret=, token=). Emits NDJSON with a verification record, a run summary, and one entry per flagged file including path, size, matched keyword, and SHA256.",
   "technology": "Windows",
   "icon": "windows",
-  "repo_url": "https://raw.githubusercontent.com/socfortress/WINDOWS-LIST-WEAK-SECRETS-COPILOT-ACTION/refs/heads/main/List-Weak-Secrets.ps1",
+  "repo_url": "https://raw.githubusercontent.com/socfortress/WINDOWS-LIST-WEAK-SECRETS-COPILOT-ACTION/refs/heads/main/List-WeakSecrets.ps1",
   "script_name": "List-Weak-Secrets.ps1",
   "version": "1.0.0",
   "last_updated": "2025-09-09T00:00:00Z"
